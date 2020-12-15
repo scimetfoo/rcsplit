@@ -94,7 +94,7 @@ fn main() {
     };
 
     behaviour.splitter = match opts_iter.next() {
-        None => "[\s\S]*", //match everything
+        None => r#"[\s\S]*"#.to_string(), //match everything
         Some(a) => a.to_owned(),
     };
 
@@ -108,7 +108,22 @@ fn main() {
         }
     };
 
-    rcsplit(&behaviour);
+    //rcsplit(&behaviour);
+}
+
+struct SplitControl {
+    current_line: String,
+    request_new_file: bool,
+}
+
+trait Splitter {
+    fn consume(&mut self, _: &mut SplitControl) -> String;
+}
+
+struct Split {
+    chars_to_write: usize,
+    break_on_line_end: bool,
+    require_whole_line: bool,
 }
 
 }
