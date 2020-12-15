@@ -94,7 +94,7 @@ fn main() {
     };
 
     behaviour.splitter = match opts_iter.next() {
-        None => "".to_owned(),
+        None => "[\s\S]*", //match everything
         Some(a) => a.to_owned(),
     };
 
