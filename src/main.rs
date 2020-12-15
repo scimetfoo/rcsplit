@@ -5,8 +5,8 @@ use getopts::Matches;
 use getopts::Options;
 use regex::Regex;
 use std::env;
-use std::fs::{File, OpenOptions};
-use std::io::{stdin, stdout, BufRead, BufReader, BufWriter, Read, Write};
+use std::fs::File;
+use std::io::{stdin, BufReader, Read};
 use std::path::Path;
 
 // static SYNOPSIS: &str = "csplit [OPTION]... FILE PATTERN...";
@@ -108,16 +108,7 @@ fn main() {
         }
     };
 
-    //rcsplit(&behaviour);
-}
-
-struct SplitControl {
-    current_line: String,
-    request_new_file: bool,
-}
-
-trait Splitter {
-    fn consume(&mut self, _: &mut SplitControl) -> String;
+    rcsplit(&behaviour);
 }
 
 struct Split {
@@ -126,4 +117,28 @@ struct Split {
     require_whole_line: bool,
 }
 
+trait Splitter {
+    fn split() -> String;
+}
+
+fn stdin_reader() -> Box<dyn Read> {
+    Box::new(stdin()) as Box<dyn Read>
+}
+
+fn open_file(filename: &str) -> File {
+    match File::open(Path::new(filename)) {
+        Ok(a) => a,
+        Err(_) => {
+            println!("File named '{}' not found", filename);
+            std::process::exit(1);
+        }
+    }
+}
+
+fn rcsplit(behaviour: &Behaviour) -> () {
+    let reader = BufReader::new(if behaviour.filename == "-" {
+        stdin_reader()
+    } else {
+        Box::new(open_file(&behaviour.filename)) as Box<dyn Read>
+    });
 }
