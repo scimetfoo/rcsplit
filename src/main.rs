@@ -6,7 +6,7 @@ use getopts::Options;
 use regex::Regex;
 use std::env;
 use std::fs::File;
-use std::io::{stdin, BufReader, Read};
+use std::io::{stdin, stdout, BufRead, BufReader, BufWriter, Read, Write};
 use std::path::Path;
 
 // static SYNOPSIS: &str = "csplit [OPTION]... FILE PATTERN...";
@@ -14,7 +14,7 @@ use std::path::Path;
 static DESCRIPTION: &str = "Output pieces of FILE separated by PATTERN(s) to files 'xx00', 'xx01', ..., and output byte counts of each piece to standard output.";
 
 pub struct Behaviour {
-    suffix_format: String,
+    //suffix_format: String,
     prefix: String,
     digits: u64,
     filename: String,
@@ -71,7 +71,7 @@ fn main() {
     }
 
     let mut behaviour = Behaviour {
-        suffix_format: "".to_owned(),
+        //suffix_format: "".to_owned(),
         prefix: "".to_owned(),
         digits: 2,
         filename: "".to_owned(),
@@ -79,7 +79,7 @@ fn main() {
         repetition_count: 1,
     };
 
-    behaviour.suffix_format = matches.opt_get_default("b", "".to_owned()).unwrap();
+    //behaviour.suffix_format = matches.opt_get_default("b", "".to_owned()).unwrap();
     behaviour.prefix = matches.opt_get_default("f", "".to_owned()).unwrap();
     behaviour.digits = matches.opt_get_default("n", 2).unwrap();
 
@@ -115,10 +115,24 @@ struct Split {
     chars_to_write: usize,
     break_on_line_end: bool,
     require_whole_line: bool,
+    request_new_file: bool,
+    file_number: usize,
 }
 
 trait Splitter {
     fn split() -> String;
+}
+
+impl Split {
+    fn new(behaviour: &Behaviour) -> Split {
+        Split {
+            request_new_file: true,
+            break_on_line_end: false,
+            chars_to_write: 0,
+            require_whole_line: false,
+            file_number: 0,
+        }
+    }
 }
 
 fn stdin_reader() -> Box<dyn Read> {
@@ -141,4 +155,10 @@ fn rcsplit(behaviour: &Behaviour) -> () {
     } else {
         Box::new(open_file(&behaviour.filename)) as Box<dyn Read>
     });
+    let mut splitter = Box::new(Split::new(behaviour));
+    let mut writer = BufWriter::new(Box::new(stdout()) as Box<dyn Write>);
+    if splitter.request_new_file {
+        let mut filename: String = behaviour.prefix.clone();
+        filename.push_str(&splitter.file_number.to_string());
+    }
 }
